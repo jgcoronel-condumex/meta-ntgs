@@ -1,5 +1,5 @@
 # Kbuild makefile for a single-file, out-of-tree kernel module
-obj-m := my_driver.o          # name of the *.o built from my_driver.c
+obj-m := my_kmalloc.o          # name of the *.o built from my_driver.c
 
 # (Optional) If your module were split in several .c files:
 # my_driver-objs := core.o dma.o irq.o
