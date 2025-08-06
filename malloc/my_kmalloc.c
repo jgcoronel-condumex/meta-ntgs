@@ -4,6 +4,8 @@
 #include <linux/vmalloc.h>   /* vmalloc/vfree */
 #include <linux/slab.h>      /* kmalloc/kfree/kzalloc */
 
+#define DRIVER_NAME "my_kmalloc_dummy"
+
 struct my_dev {
 	/* 4 KiB contiguos en RAM física —útil para DMA o registros MMIO */
 	void        *dma_buf;
@@ -38,7 +40,7 @@ static int my_probe(struct platform_device *pdev)
 		goto err_free_kmalloc;
 	}
 
-	dev_info(&pdev->dev, "Buffers asignados con éxito\n");
+	printk(KERN_INFO "Buffers asignados con éxito\n");
 	return 0;
 
 err_free_kmalloc:
@@ -54,10 +56,34 @@ static int my_remove(struct platform_device *pdev)
 	vfree(pdev_priv->big_array);   /* inverso de vmalloc() */
 	kfree(pdev_priv->dma_buf);     /* inverso de kmalloc() */
 	kfree(pdev_priv);              /* inverso de kzalloc() */
-	dev_info(&pdev->dev, "Buffers liberados\n");
+	printk(KERN_INFO "Buffers liberados\n");
 	return 0;
 }
 
-/* Boilerplate del driver (omitido) */
-MODULE_AUTHOR("Juanito babana");
+static struct platform_driver my_platform_driver = {
+	.probe  = my_probe,
+	.remove = my_remove,
+	.driver = {
+		.name = DRIVER_NAME,
+	},
+};
+
+static struct platform_device *my_device;
+
+static int __init my_init(void)
+{
+	my_device = platform_device_register_simple(DRIVER_NAME, -1, NULL, 0);
+	return platform_driver_register(&my_platform_driver);
+}
+
+static void __exit my_exit(void)
+{
+	platform_driver_unregister(&my_platform_driver);
+	platform_device_unregister(my_device);
+}
+module_init(my_init);
+module_exit(my_exit);
+
 MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Tu Nombre");
+
